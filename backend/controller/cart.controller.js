@@ -79,9 +79,7 @@ export const updateQuantity = async (req, res) => {
 
     quantity = Number(quantity); // Convert quantity to a number
 
-    console.log("📌 Product ID from URL:", id);
-    console.log("🔍 Checking if product exists in cart...");
-    console.log("🛒 User's cart:", user.cartItems.map(item => item.product.toString())); // Convert all IDs to string for debugging
+  
 
     // Convert productId to ObjectId for proper comparison
     const productId = new mongoose.Types.ObjectId(id);
@@ -96,12 +94,10 @@ export const updateQuantity = async (req, res) => {
     const itemIndex = user.cartItems.findIndex(item => item.product.equals(productId));
 
     if (itemIndex === -1) {
-      console.warn("❌ Product not found in cart:", productId);
       return res.status(404).json({ message: "Product not found in cart" });
     }
 
     if (quantity < 0) {
-      console.warn("⚠️ Invalid quantity:", quantity);
       return res.status(400).json({ message: "Quantity cannot be negative" });
     }
 
@@ -131,7 +127,6 @@ export const getCartProducts = async (req, res) => {
           return res.status(401).json({ message: "Unauthorized" });
       }
 
-      console.log("📦 Fetched Cart Items with Products:", user.cartItems); // Debugging log
 
       res.json(user.cartItems || []); // Send populated cart items
   } catch (error) {

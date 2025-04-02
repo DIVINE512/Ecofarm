@@ -13,12 +13,23 @@ const GiftCouponCard = () => {
 	useEffect(() => {
 		if (coupon) setUserInputCode(coupon.code);
 	}, [coupon]);
-
-	const handleApplyCoupon = () => {
+	
+	useEffect(() => {
+		console.log("Coupon state updated:", coupon);
+	}, [coupon]);
+	
+	const handleApplyCoupon = async () => {
 		if (!userInputCode) return;
-		applyCoupon(userInputCode);
+	
+		const success = await applyCoupon(userInputCode); 
+	
+		if (success) {
+			getMyCoupon(); 
+		}
 	};
+	
 
+	
 	const handleRemoveCoupon = async () => {
 		await removeCoupon();
 		setUserInputCode("");

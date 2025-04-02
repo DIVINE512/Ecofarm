@@ -12,22 +12,38 @@ export const useCartStore = create((set, get) => ({
 	getMyCoupon: async () => {
 		try {
 			const response = await axiosInstance.get("/coupons");
-			set({ coupon: response.data });
+	
+	
+			if (Array.isArray(response.data) && response.data.length > 0) {
+				set({ coupon: response.data[0] }); // Store the first coupon
+			} else {
+				console.warn("No valid coupons found in the response");
+				set({ coupon: null });
+			}
 		} catch (error) {
-			console.error("Error fetching coupon:", error);
+			console.error("Error fetching coupon:", error.response?.data || error);
+			toast.error("Failed to fetch coupon");
 		}
 	},
+	
+	
 
 	applyCoupon: async (code) => {
 		try {
 			const response = await axiosInstance.post("/coupons/validate", { code });
-			set({ coupon: response.data, isCouponApplied: true });
-			get().calculateTotals();
-			toast.success("Coupon applied successfully");
+	
+			if (response.data && response.data.discountPercentage !== undefined) {
+				set({ coupon: response.data, isCouponApplied: true });
+				get().calculateTotals();
+				toast.success("Coupon applied successfully");
+			} else {
+				toast.error("Invalid coupon response from server");
+			}
 		} catch (error) {
 			toast.error(error.response?.data?.message || "Failed to apply coupon");
 		}
 	},
+	
 
 	removeCoupon: () => {
 		set({ coupon: null, isCouponApplied: false });
@@ -59,7 +75,6 @@ export const useCartStore = create((set, get) => ({
 	
 			toast.success("Product added to cart");
 	
-			// Update the cart state
 			set((prevState) => {
 	
 				const cart = Array.isArray(prevState.cart) ? prevState.cart : [];
@@ -96,7 +111,6 @@ export const useCartStore = create((set, get) => ({
 
 	updateQuantity: async (productId, quantity) => {
 		try {
-			console.log("Using axiosInstance:", axiosInstance);  // Check if the right instance is being used
 	
 			const existingItem = get().cart.find((item) => item.product._id === productId);
 			if (!existingItem) {
@@ -132,18 +146,16 @@ export const useCartStore = create((set, get) => ({
 		const { cart, coupon } = get();
 		
 		const subtotal = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
-		
 		let total = subtotal;
 	
-		if (coupon) {
+		if (coupon && coupon.discountPercentage) {
 			const discount = subtotal * (coupon.discountPercentage / 100);
 			total = subtotal - discount;
 		}
 	
-		
-	
 		set({ subtotal, total });
 	},
+	
 	
 }));
 

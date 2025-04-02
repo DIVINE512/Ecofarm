@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { MoveRight } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js";
 import axiosInstance from "../lib/axios";
+import { useState } from "react";
 
 const stripePromise = loadStripe(
 	"pk_test_51R2VMHHG2cD0r1KcubPXHVy4aK4FPbzsBbnJlyi0cgGD6yT8XvH0QjBBf3A8dAkXuITDdUtmnW4iNxTgUzIHJWwY00YiquqJIt"
@@ -17,22 +18,42 @@ const OrderSummary = () => {
 	const formattedTotal = total.toFixed(2);
 	const formattedSavings = savings.toFixed(2);
 
-	const handlePayment = async () => {
-		const stripe = await stripePromise;
-		const res = await axiosInstance.post("/payments/create-checkout-session", {
-			products: cart,
-			couponCode: coupon ? coupon.code : null,
-		});
+	const [isLoading, setIsLoading] = useState(false);
 
-		const session = res.data;
-		const result = await stripe.redirectToCheckout({
-			sessionId: session.id,
-		});
+const handlePayment = async () => {
+    if (isLoading) return; 
+    setIsLoading(true);
 
-		if (result.error) {
-			console.error("Error:", result.error);
-		}
-	};
+    try {
+        const stripe = await stripePromise;
+        console.log("Cart:", cart);
+  
+        const res = await axiosInstance.post("/payment/create-checkout-session", {
+            products: cart,
+            couponCode: coupon ? coupon.code : null,
+        });
+
+        console.log("Backend Response:", res.data); 
+  
+        if (!res.data.sessionId) {
+            throw new Error("Session ID is missing from the response");
+        }
+
+        const result = await stripe.redirectToCheckout({
+            sessionId: res.data.sessionId, 
+        });
+
+        if (result.error) {
+            console.error("Stripe Checkout Error:", result.error);
+        }
+    } catch (error) {
+        console.error("Payment Error:", error.message);
+    } finally {
+        setIsLoading(false);
+    }
+};
+
+	
 
 	return (
 		<motion.div

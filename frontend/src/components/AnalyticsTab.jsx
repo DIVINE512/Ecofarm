@@ -6,4 +6,4 @@ const AnalyticsTab = () => {
   )
 }
 
-export default AnalyticsTab;
+export default AnalyticsTab

@@ -110,7 +110,6 @@ export const login = async (req, res) => {
    
 };
 
-// this will refresh access token
 export const refreshToken = async (req, res) => {
   try {
     const refreshToken = req.cookies?.refreshToken;
